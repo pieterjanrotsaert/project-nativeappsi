@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Mijn HoGent</string>
+    <string name="err_internal">Interne Fout</string>
+    <string name="err_internal_description">Er is een interne fout opgetreden.</string>
+
+    <string name="err_wrongcredentials">Gegevens Onjuist</string>
+    <string name="err_wrongcredentials_description">Je gebruikersnaam en/of wachtwoord zijn fout. Probeer het opnieuw.</string>
+
+    <string name="err_creatingsession">Verbindingsfout</string>
+    <string name="err_creatingsession_description">Er kon geen Chamilo-sessie aangemaakt worden. Controleer je internetverbinding.</string>
+
+</resources>
