@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
             err ->
             if(err != null)
                 print(err.getName(this))
+            Chamilo.getInstance(this).logout(){}
         }
 
 

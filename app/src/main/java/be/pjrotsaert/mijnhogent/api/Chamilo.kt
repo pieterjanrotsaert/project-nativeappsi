@@ -285,6 +285,43 @@ class Chamilo {
         }
     }
 
+    fun logout(callback: (err: APIError?) -> Unit){
+        sendRequest(Request.Method.GET, chamiloUrl + "/index.php?application=Chamilo%5CCore%5CUser&go=Logout", constructHeaders(), null) {
+            result ->
+            if(result.statusCode == 200){
+                val samlRequest: String = parseBodyPart(result.body, "name=\"SAMLRequest\" value=\"", "\"") ?: ""
+                val params = HashMap<String, String>()
+                params["SAMLRequest"] = samlRequest
+                sendRequest(Request.Method.POST, idpHogentUrl + "/saml/idp/profile/post/sls", constructHeaders(), params){
+                    result ->
+                    val samlResponse: String = parseBodyPart(result.body, "name=\"SAMLResponse\" value=\"", "\"") ?: ""
+                    if(samlResponse.isNotEmpty()){
+                        params.clear()
+                        params["SAMLResponse"] = samlResponse
+                        sendRequest(Request.Method.POST, chamiloUrl + "/", constructHeaders(), params){
+                            result ->
+                            if(result.statusCode == 200){
+                                cookies.clear()
+                                callback(null)
+                            }
+                            else{
+                                cookies.clear()
+                                callback(APIError(R.string.err_internal, R.string.err_internal_description))
+                            }
+                        }
+                    }
+                    else{
+                        cookies.clear()
+                        callback(APIError(R.string.err_internal, R.string.err_internal_description))
+                    }
+                }
+            }
+            else{
+                cookies.clear()
+                callback(APIError(R.string.err_internal, R.string.err_internal_description))
+            }
+        }
+    }
 
 }
 

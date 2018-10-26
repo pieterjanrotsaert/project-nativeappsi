@@ -9,4 +9,7 @@
     <string name="err_creatingsession">Verbindingsfout</string>
     <string name="err_creatingsession_description">Er kon geen Chamilo-sessie aangemaakt worden. Controleer je internetverbinding.</string>
 
+    <string name="err_notloggedin">Niet ingelogd</string>
+    <string name="err_notloggedin_description">Je bent niet aangemeld. Meld je aan om door te gaan..</string>
+
 </resources>
