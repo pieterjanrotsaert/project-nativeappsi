@@ -1,6 +1,7 @@
 package be.pjrotsaert.mijnhogent.api
 
 import android.content.Context
+import android.util.JsonWriter
 import be.pjrotsaert.mijnhogent.R
 import com.android.volley.*
 import com.android.volley.toolbox.HttpHeaderParser
@@ -8,13 +9,17 @@ import com.android.volley.toolbox.Volley
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 import com.android.volley.toolbox.HurlStack
+import org.json.JSONObject
+import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDateTime
+import java.util.*
 
 
 class Chamilo {
 
-    class GenericResponse {
+    private class GenericResponse {
         var statusCode: Int = 0
         var headers: HashMap<String, String> = HashMap()
         var cookies: HashMap<String, String> = HashMap()
@@ -23,7 +28,7 @@ class Chamilo {
         var error: String? = null
     }
 
-    class GenericRequest(
+    private class GenericRequest(
             method: Int,
             url: String,
             private val params: HashMap<String, String>,
@@ -35,7 +40,7 @@ class Chamilo {
         init {
             if(headers != null && body != null){
                 headers["Content-Length"] = body.size.toString()
-                headers["Content-Type"] = "application/x-www-form-urlencoded"
+                headers["Content-Type"]   = "application/x-www-form-urlencoded"
             }
         }
 
@@ -103,12 +108,24 @@ class Chamilo {
         }
     }
 
-    var ctx: Context? = null
-    var queue: RequestQueue?  = null
+    private var ctx: Context? = null
+    private var queue: RequestQueue?  = null
 
-    val idpHogentUrl = "https://idp.hogent.be"
-    val chamiloUrl = "https://chamilo.hogent.be"
-    val loginUrl = "https://login.hogent.be"
+    private val urlHogentIdpBase        = "https://idp.hogent.be"
+    private val urlChamiloBase          = "https://chamilo.hogent.be"
+    private val urlLoginBase            = "https://login.hogent.be"
+
+    private val urlHogentLoginAction    = "$urlLoginBase/?action="
+    private val urlHogentSSO            = "$urlHogentIdpBase/saml/idp/profile/redirectorpost/sso"
+    private val urlHogentSLS            = "$urlHogentIdpBase/saml/idp/profile/post/sls"
+    private val urlHogentMyPolicy       = "$urlHogentIdpBase/my.policy"
+
+    private val urlChamiloLogin         = "$urlChamiloBase/index.php?application=Hogent%5CIntegration%5CSSO&go=adfs_login"
+    private val urlChamiloLogout        = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CUser&go=Logout"
+    private val urlChamiloSAMLSubmit    = "$urlChamiloBase/sso/module.php/saml/sp/saml2-acs.php/default-sp"
+    private val urlChamiloHome          = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CHome"
+    private val urlChamiloGetActivities = "$urlChamiloBase/index.php?go=GetActivities&application=Hogent%5CApplication%5CSyllabusPlus%5CAjax"
+
 
     var cookies = HashMap<String, String>()
     var cookieBlacklist = ArrayList<String>()
@@ -148,36 +165,35 @@ class Chamilo {
 
     private fun constructHeaders(): HashMap<String, String>{
         val headers = HashMap<String, String>()
+
         var cookieString = ""
-
-        headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36"
-        headers["Accept-Encoding"] = "identity"
-        headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
-        headers["Origin"] = chamiloUrl
-        headers["Accept-Language"] = "en-US,en;q=0.9,nl;q=0.8"
-        headers["Cache-Control"] = "max-age=0"
-        headers["Connection"] = "keep-alive"
-        headers["Upgrade-Insecure-Requests"] = "1"
-
         for(cookie in cookies){
             if(!cookieBlacklist.contains(cookie.key.toLowerCase())){
                 cookieString += cookie.key + "=" + cookie.value + "; "
             }
         }
 
+        headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36"
+        headers["Accept-Encoding"] = "identity"
+        headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
+        headers["Origin"] = urlChamiloBase
+        headers["Accept-Language"] = "en-US,en;q=0.9,nl;q=0.8"
+        headers["Cache-Control"] = "max-age=0"
+        headers["Connection"] = "keep-alive"
+        headers["Upgrade-Insecure-Requests"] = "1"
         headers["Cookie"] = cookieString
+
         return headers
     }
 
     private fun initiateSession(cb: (token: Boolean) -> Unit) {
-        if(cookies["SimpleSAMLSessionID"] != null)
+        if(isSessionInitialized())
             cb(true) // Session already initialized, return immediately
         else
         {
             // Simply GETting the chamilo homepage will give us a session id cookie
-            sendRequest(Request.Method.GET, chamiloUrl + "/", constructHeaders(), null) {
-                result ->
-                cb(cookies["SimpleSAMLSessionID"] != null)
+            sendRequest(Request.Method.GET, "$urlChamiloBase/", constructHeaders(), null) {
+                result -> cb(isSessionInitialized())
             }
         }
     }
@@ -196,8 +212,58 @@ class Chamilo {
         })
     }
 
+    fun getActivities(startTime: Calendar, endTime: Calendar, activityType: String, callback: (activities: String, err: APIError?) -> Unit) {
+        getActivities("${startTime.get(Calendar.YEAR)}-${startTime.get(Calendar.MONTH)}-${startTime.get(Calendar.DAY_OF_MONTH)}",
+                "${endTime.get(Calendar.YEAR)}-${endTime.get(Calendar.MONTH)}-${endTime.get(Calendar.DAY_OF_MONTH)}", activityType, callback)
+    }
+
+    fun getActivities(startTime: String, endTime:String, activityType: String, callback: (activities: String, err: APIError?) -> Unit) {
+        val params = HashMap<String, String>()
+        params["start_time"] = startTime
+        params["end_time"] = endTime
+        params["subgroups"] = ""
+        params["activity_type"] = activityType
+
+        sendRequest(Request.Method.POST, urlChamiloGetActivities, constructHeaders(), params){
+            result ->
+
+            try{
+                val json = JSONObject(result.body)
+                callback(result.body, null)
+            }
+            catch (ex: Exception){
+                callback("", APIError(R.string.err_notloggedin, R.string.err_notloggedin_description))
+            }
+        }
+    }
+
+    // Returns current session info (cookies) as a JSON string. The result can be passed to restoreSessionData()
+    fun getSessionData(): String {
+        val json = JSONObject()
+        for(pair in cookies)
+            json.put(pair.key, pair.value)
+        return json.toString()
+    }
+
+    fun restoreSessionData(sessionData: String, callback: (err: APIError?) -> Unit) {
+        try {
+            val json = JSONObject(sessionData)
+            for (k in json.keys())
+                cookies[k] = json.getString(k)
+        }
+        catch(ex: Exception){
+        }
+
+        // Test if the session is still valid by calling getActivities(), if it doesn't return an error, the session is still valid.
+        getActivities("1990-0-0", "1990-0-0", "lesson") { result, err -> callback(err) }
+    }
+
     fun isLoggedIn(): Boolean {
         return cookies["SimpleSAMLAuthToken"] != null
+    }
+
+    fun isSessionInitialized(): Boolean {
+        return cookies["SimpleSAMLSessionID"] != null
     }
 
     fun login(username: String, password: String, callback: (error: APIError?) -> Unit) {
@@ -208,7 +274,7 @@ class Chamilo {
         initiateSession { success ->
             if(success){
                 val params = HashMap<String, String>()
-                sendRequest(Request.Method.GET, chamiloUrl + "/index.php?application=Hogent%5CIntegration%5CSSO&go=adfs_login", constructHeaders(), params) {
+                sendRequest(Request.Method.GET, urlChamiloLogin, constructHeaders(), params) {
                     result ->
                     val samlRequest: String = parseBodyPart(result.body, "name=\"SAMLRequest\" value=\"", "\"") ?: ""
                     val relayState: String = parseBodyPart(result.body, "name=\"RelayState\" value=\"", "\"") ?: ""
@@ -217,63 +283,61 @@ class Chamilo {
                         params.clear()
                         params["SAMLRequest"] = samlRequest
                         params["RelayState"] = relayState
-                        sendRequest(Request.Method.POST, idpHogentUrl + "/saml/idp/profile/redirectorpost/sso", constructHeaders(), params){
+                        sendRequest(Request.Method.POST, urlHogentSSO, constructHeaders(), params){
                             result ->
-                                if(result.statusCode == 302){ // 302 -> Http redirect
-                                    params.clear()
+                            if(result.statusCode == 302) { // 302 -> Http redirect
+                                params.clear()
 
-                                    // This is a useless request... But for some reason if we do don't make this request before proceeding, the server will return an internal error..
-                                    // (Probably a bug with Chamilo?)
-                                    sendRequest(Request.Method.GET, idpHogentUrl + "/my.policy", constructHeaders(), params) {}
-
+                                // This is a useless request... But for some reason if we do don't make this request before proceeding,
+                                // the server will return an internal error.. (Probably a bug with Chamilo?)
+                                sendRequest(Request.Method.GET, urlHogentMyPolicy, constructHeaders(), params) { _ ->
                                     params["client_data"] = "SecurityDevice"
-                                    params["post_url"] = idpHogentUrl + "/my.policy"
-                                    sendRequest(Request.Method.POST, loginUrl + "/?action=", constructHeaders(), params) {
-                                        result ->
-                                            if(result.statusCode == 200){
-                                                params.clear()
-                                                params["username"] = username
-                                                params["password"] = password
-                                                sendRequest(Request.Method.POST, idpHogentUrl + "/my.policy", constructHeaders(), params) {
-                                                    result ->
-                                                    val dummy: String = parseBodyPart(result.body, "name=\"dummy\" value=\"", "\"") ?: ""
-                                                    if(dummy.isNotEmpty()){
-                                                        params.clear()
-                                                        params["dummy"] = dummy
-                                                        params["SAMLRequest"] = samlRequest
-                                                        sendRequest(Request.Method.POST, idpHogentUrl + "/saml/idp/profile/redirectorpost/sso", constructHeaders(), params){
-                                                            result ->
-                                                            val samlResponse: String = parseBodyPart(result.body, "name=\"SAMLResponse\" value=\"", "\"") ?: ""
-                                                            if(samlResponse.isNotEmpty()){
-                                                                params.clear()
-                                                                params["SAMLResponse"] = samlResponse
-                                                                params["RelayState"] = relayState
-                                                                sendRequest(Request.Method.POST, chamiloUrl + "/sso/module.php/saml/sp/saml2-acs.php/default-sp", constructHeaders(), params) {
-                                                                    result ->
-                                                                    if(isLoggedIn()) // SUCCESS
-                                                                        callback(null)
-                                                                    else
-                                                                        callback(APIError(R.string.err_internal, R.string.err_internal_description))
-                                                                }
+                                    params["post_url"] = urlHogentMyPolicy
+                                    sendRequest(Request.Method.POST, urlHogentLoginAction, constructHeaders(), params) { result ->
+                                        if (result.statusCode == 200) {
+                                            params.clear()
+                                            params["username"] = username
+                                            params["password"] = password
+                                            sendRequest(Request.Method.POST, urlHogentMyPolicy, constructHeaders(), params) { result ->
+                                                val dummy: String = parseBodyPart(result.body, "name=\"dummy\" value=\"", "\"") ?: ""
+                                                if (dummy.isNotEmpty()) {
+                                                    params.clear()
+                                                    params["dummy"] = dummy
+                                                    params["SAMLRequest"] = samlRequest
+                                                    sendRequest(Request.Method.POST, urlHogentSSO, constructHeaders(), params) { result ->
+                                                        val samlResponse: String = parseBodyPart(result.body, "name=\"SAMLResponse\" value=\"", "\"")
+                                                                ?: ""
+                                                        if (samlResponse.isNotEmpty()) {
+                                                            params.clear()
+                                                            params["SAMLResponse"] = samlResponse
+                                                            params["RelayState"] = relayState
+                                                            sendRequest(Request.Method.POST, urlChamiloSAMLSubmit, constructHeaders(), params) { result ->
+                                                                if (isLoggedIn()) // SUCCESS
+                                                                    callback(null)
+                                                                else
+                                                                    callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                                             }
-                                                            else
-                                                                callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                                         }
-                                                    }
-                                                    else {
-                                                        if(result.headers["Location"]?.contains("errorcode=21") ?: false) // errorcode for invalid username/password
-                                                            callback(APIError(R.string.err_wrongcredentials, R.string.err_wrongcredentials_description))
                                                         else
                                                             callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                                     }
+                                                } else {
+                                                    if (result.headers["Location"] == null)
+                                                        callback(APIError(R.string.err_internal, R.string.err_internal_description))
+                                                    else if (result.headers["Location"]!!.contains("errorcode=21")) // 21 is the errorcode for invalid username/password
+                                                        callback(APIError(R.string.err_wrongcredentials, R.string.err_wrongcredentials_description))
+                                                    else
+                                                        callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                                 }
                                             }
-                                            else
-                                                callback(APIError(R.string.err_internal, R.string.err_internal_description))
+                                        }
+                                        else
+                                            callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                     }
                                 }
-                                else
-                                    callback(APIError(R.string.err_internal, R.string.err_internal_description))
+                            }
+                            else
+                                callback(APIError(R.string.err_internal, R.string.err_internal_description))
                         }
                     }
                     else
@@ -286,19 +350,19 @@ class Chamilo {
     }
 
     fun logout(callback: (err: APIError?) -> Unit){
-        sendRequest(Request.Method.GET, chamiloUrl + "/index.php?application=Chamilo%5CCore%5CUser&go=Logout", constructHeaders(), null) {
+        sendRequest(Request.Method.GET, urlChamiloLogout, constructHeaders(), null) {
             result ->
             if(result.statusCode == 200){
                 val samlRequest: String = parseBodyPart(result.body, "name=\"SAMLRequest\" value=\"", "\"") ?: ""
                 val params = HashMap<String, String>()
                 params["SAMLRequest"] = samlRequest
-                sendRequest(Request.Method.POST, idpHogentUrl + "/saml/idp/profile/post/sls", constructHeaders(), params){
+                sendRequest(Request.Method.POST, urlHogentSLS, constructHeaders(), params){
                     result ->
                     val samlResponse: String = parseBodyPart(result.body, "name=\"SAMLResponse\" value=\"", "\"") ?: ""
                     if(samlResponse.isNotEmpty()){
                         params.clear()
                         params["SAMLResponse"] = samlResponse
-                        sendRequest(Request.Method.POST, chamiloUrl + "/", constructHeaders(), params){
+                        sendRequest(Request.Method.POST, "$urlChamiloBase/", constructHeaders(), params){
                             result ->
                             if(result.statusCode == 200){
                                 cookies.clear()

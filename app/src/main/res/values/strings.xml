@@ -12,4 +12,20 @@
     <string name="err_notloggedin">Niet ingelogd</string>
     <string name="err_notloggedin_description">Je bent niet aangemeld. Meld je aan om door te gaan..</string>
 
+
+
+    <!-- Strings related to login -->
+    <string name="title_activity_login">Aanmelden</string>
+    <string name="prompt_email">E-Mail HoGent</string>
+    <string name="prompt_password">Wachtwoord</string>
+    <string name="action_sign_in">Aanmelden</string>
+    <string name="action_sign_in_short">Aanmelden</string>
+    <string name="error_invalid_email">Het e-mailadres is ongeldig.</string>
+    <string name="error_invalid_password">Het wachtwoord is ongeldig.</string>
+    <string name="error_incorrect_password">Wachtwoord onjuist.</string>
+    <string name="error_field_required">Gelieve dit veld in te vullen.</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+
 </resources>
