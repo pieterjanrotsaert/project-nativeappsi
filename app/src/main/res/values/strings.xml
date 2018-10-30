@@ -12,7 +12,9 @@
     <string name="err_notloggedin">Niet ingelogd</string>
     <string name="err_notloggedin_description">Je bent niet aangemeld. Meld je aan om door te gaan..</string>
 
-
+    <string name="today">Vandaag</string>
+    <string name="lessons">Lessenrooster</string>
+    <string name="exams">Examenrooster</string>
 
     <!-- Strings related to login -->
     <string name="title_activity_login">Aanmelden</string>
@@ -27,5 +29,13 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="title_activity_nav_drawer">NavDrawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
 
 </resources>

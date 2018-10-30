@@ -24,8 +24,10 @@ import android.widget.TextView
 import java.util.ArrayList
 import android.Manifest.permission.READ_CONTACTS
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.view.inputmethod.InputMethodManager
 import be.pjrotsaert.mijnhogent.R
 import be.pjrotsaert.mijnhogent.api.Chamilo
 
@@ -113,15 +115,17 @@ class LoginActivity : AppCompatActivity() {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true)
+            val imm: InputMethodManager = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(findViewById<View>(android.R.id.content).rootView.windowToken, 0)
             Chamilo.getInstance(this).login(emailStr, passwordStr) {
                 err ->
-                showProgress(false)
                 if(err == null){
                     // Store session info so the user doesn't need to log in everytime the app is started.
                     prefs.edit().putString("session", Chamilo.getInstance(this).getSessionData()).apply()
                     startActivity(MainActivity.createIntent(this)) // Proceed to main activity
                     finish()
                 } else {
+                    showProgress(false)
                     if(err.getNameId() == R.string.err_wrongcredentials) {
                         password.error = getString(err.getDescriptionId())
                         password.requestFocus()
@@ -141,7 +145,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun isPasswordValid(password: String): Boolean {
-        return password.length > 0
+        return password.isNotEmpty()
     }
 
     /**

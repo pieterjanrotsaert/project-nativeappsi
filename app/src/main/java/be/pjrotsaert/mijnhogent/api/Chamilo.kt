@@ -9,10 +9,12 @@ import com.android.volley.toolbox.Volley
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 import com.android.volley.toolbox.HurlStack
+import org.joda.time.DateTime
 import org.json.JSONObject
 import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
 
@@ -125,10 +127,12 @@ class Chamilo {
     private val urlChamiloSAMLSubmit    = "$urlChamiloBase/sso/module.php/saml/sp/saml2-acs.php/default-sp"
     private val urlChamiloHome          = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CHome"
     private val urlChamiloGetActivities = "$urlChamiloBase/index.php?go=GetActivities&application=Hogent%5CApplication%5CSyllabusPlus%5CAjax"
+    private val urlChamiloGetProfilePic = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CUser%5CAjax&go=UserPicture&user_id="
 
 
     var cookies = HashMap<String, String>()
     var cookieBlacklist = ArrayList<String>()
+    var userId = 0
 
     init {
         cookieBlacklist.add("domain")
@@ -212,9 +216,62 @@ class Chamilo {
         })
     }
 
+    fun getActivities(startTime: DateTime, endTime: DateTime, activityType: String, callback: (activities: ArrayList<ActivityData>?, err: APIError?) -> Unit) {
+        val calStart = Calendar.getInstance()
+        val calEnd = Calendar.getInstance()
+        calStart.time = startTime.toDate()
+        calEnd.time = endTime.toDate()
+
+        val list = ArrayList<ActivityData>()
+
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+        formatter.timeZone = TimeZone.getTimeZone("GMT")
+
+        getActivities(calStart, calEnd, activityType){
+            jsonString, err ->
+            try {
+                val resultJson = JSONObject(jsonString)
+                if(resultJson.getString("result_message") != "OK")
+                    callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+                else {
+                    val innerJson = JSONObject(resultJson.getJSONObject("properties").getString("activities"))
+                    val dataArr = innerJson.getJSONArray("data")
+                    for(i in 0 until dataArr.length()){
+                        val jsonData = dataArr.getJSONObject(i)
+                        val d = ActivityData()
+                        d.activityId = jsonData.getString("Activity_Id")
+
+                        var date = jsonData.getString("StartDateTime")
+                        date = date.substring(0, date.indexOf("+"))
+
+                        d.startDateTime = formatter.parse(date)
+
+                        date = jsonData.getString("EndDateTime")
+                        date = date.substring(0, date.indexOf("+"))
+                        d.endDateTime = formatter.parse(date)
+
+
+                        d.activityDescription = jsonData.getString("Activity_Description")
+                        d.weekLabel = jsonData.getString("WeekLabel")
+                        d.activityType = jsonData.getString("ActivityType_Description")
+                        d.locationDescription = jsonData.getString("Locations_Description")
+                        d.moduleDescription = jsonData.getString("Modules_Description")
+                        d.staffDescription = jsonData.getString("Staff_Description")
+                        d.studentGroupDescription = jsonData.getString("StudentSetGroup_Description")
+                        list.add(d)
+                    }
+                    callback(list, null)
+                }
+            }
+            catch (ex: Exception){
+                callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+            }
+        }
+    }
+
     fun getActivities(startTime: Calendar, endTime: Calendar, activityType: String, callback: (activities: String, err: APIError?) -> Unit) {
-        getActivities("${startTime.get(Calendar.YEAR)}-${startTime.get(Calendar.MONTH)}-${startTime.get(Calendar.DAY_OF_MONTH)}",
-                "${endTime.get(Calendar.YEAR)}-${endTime.get(Calendar.MONTH)}-${endTime.get(Calendar.DAY_OF_MONTH)}", activityType, callback)
+        getActivities("${startTime.get(Calendar.YEAR)}-${startTime.get(Calendar.MONTH)+1}-${startTime.get(Calendar.DAY_OF_MONTH)}",
+                "${endTime.get(Calendar.YEAR)}-${endTime.get(Calendar.MONTH)+1}-${endTime.get(Calendar.DAY_OF_MONTH)}", activityType, callback)
     }
 
     fun getActivities(startTime: String, endTime:String, activityType: String, callback: (activities: String, err: APIError?) -> Unit) {
@@ -240,22 +297,33 @@ class Chamilo {
     // Returns current session info (cookies) as a JSON string. The result can be passed to restoreSessionData()
     fun getSessionData(): String {
         val json = JSONObject()
+        val cookieJson = JSONObject()
         for(pair in cookies)
-            json.put(pair.key, pair.value)
+            cookieJson.put(pair.key, pair.value)
+        json.put("cookies", cookieJson)
+        json.put("userId", userId)
         return json.toString()
     }
 
     fun restoreSessionData(sessionData: String, callback: (err: APIError?) -> Unit) {
         try {
             val json = JSONObject(sessionData)
-            for (k in json.keys())
-                cookies[k] = json.getString(k)
+            val cookieJson = json.getJSONObject("cookies")
+            userId = json.getInt("userId")
+            for (k in cookieJson.keys())
+                cookies[k] = cookieJson.getString(k)
         }
         catch(ex: Exception){
         }
 
         // Test if the session is still valid by calling getActivities(), if it doesn't return an error, the session is still valid.
-        getActivities("1990-0-0", "1990-0-0", "lesson") { result, err -> callback(err) }
+        getActivities("1990-0-0", "1990-0-0", "lesson") { result, err ->
+            if(err != null) {
+                userId = 0
+                cookies.clear() // Session restoration not successful, clear cookies.
+            }
+            callback(err)
+        }
     }
 
     fun isLoggedIn(): Boolean {
@@ -312,8 +380,22 @@ class Chamilo {
                                                             params["SAMLResponse"] = samlResponse
                                                             params["RelayState"] = relayState
                                                             sendRequest(Request.Method.POST, urlChamiloSAMLSubmit, constructHeaders(), params) { result ->
-                                                                if (isLoggedIn()) // SUCCESS
-                                                                    callback(null)
+                                                                if (isLoggedIn()) { // SUCCESS
+                                                                    sendRequest(Request.Method.GET, urlChamiloHome, constructHeaders(), null){ result ->
+                                                                        if(result.statusCode == 302){ // For some reason, the server returns a redirect on the first GET..
+                                                                            sendRequest(Request.Method.GET, urlChamiloHome, constructHeaders(), null) { result ->
+                                                                                val idStr = parseBodyPart(result.body, "user_id=", "\"") ?: ""
+                                                                                userId = idStr.toIntOrNull() ?: 0
+                                                                                callback(null)
+                                                                            }
+                                                                        }
+                                                                        else {
+                                                                            val idStr = parseBodyPart(result.body, "user_id=", "\"") ?: ""
+                                                                            userId = idStr.toIntOrNull() ?: 0
+                                                                            callback(null)
+                                                                        }
+                                                                    }
+                                                                }
                                                                 else
                                                                     callback(APIError(R.string.err_internal, R.string.err_internal_description))
                                                             }
