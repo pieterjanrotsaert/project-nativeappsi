@@ -10,14 +10,18 @@ import com.android.volley.toolbox.Volley
 import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
 import com.android.volley.toolbox.HurlStack
+import org.apache.commons.lang3.StringEscapeUtils
 import org.joda.time.DateTime
+import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLDecoder
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
+import java.util.function.IntToDoubleFunction
 
 
 class Chamilo {
@@ -109,6 +113,27 @@ class Chamilo {
             else
                 return null
         }
+
+        private fun parseMultiBodyPart(body: String, start: String, end: String): ArrayList<String> {
+            val list = ArrayList<String>()
+            var curIdx = 0
+
+            while(true){
+                val idxStart = body.indexOf(start, curIdx)
+                if(idxStart != -1){
+                    val idxEnd = body.indexOf(end, idxStart + start.length)
+                    if(idxEnd != -1){
+                        curIdx = idxEnd + end.length
+                        list.add(body.substring(idxStart + start.length, idxEnd))
+                    }
+                    else
+                        break
+                }
+                else
+                    break
+            }
+            return list
+        }
     }
 
     private var ctx: Context? = null
@@ -129,6 +154,12 @@ class Chamilo {
     private val urlChamiloHome          = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CHome"
     private val urlChamiloGetActivities = "$urlChamiloBase/index.php?go=GetActivities&application=Hogent%5CApplication%5CSyllabusPlus%5CAjax"
     private val urlChamiloGetProfilePic = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CUser%5CAjax&go=UserPicture&user_id="
+    private val urlChamiloCurriculum    = "$urlChamiloBase/index.php?application=Hogent\\Application\\Bamaflex"
+    private val urlChamiloGetCourse     = "$urlChamiloBase/index.php?go=CourseViewer&application=Chamilo%5CApplication%5CWeblcms&course="
+
+
+    private val urlChamiloSuffixGetAssignmentPublication    = "&tool=Assignment&browser=Table&tool_action=Display&publication="
+    private val urlChamiloSuffixGetAssignment               = "&tool=Assignment"
 
 
     private var cookies = HashMap<String, String>()
@@ -324,6 +355,93 @@ class Chamilo {
 
     fun getUserEmailAddress(): String {
         return userEmailAddress
+    }
+
+    fun getCourses(callback: (ArrayList<CourseData>?, err: APIError?) -> Unit){
+        sendRequest(Request.Method.GET, urlChamiloCurriculum, constructHeaders(), null) {
+            result ->
+            if(result.statusCode == 200){
+                val courseJsonString = parseBodyPart(result.body, "var courses = ", ";")
+                val list = ArrayList<CourseData>()
+                try {
+                    val dataArr = JSONArray(courseJsonString)
+                    for(i in 0 until dataArr.length()){
+                        val d = CourseData()
+                        val jsonData = dataArr.getJSONObject(i)
+                        d.identifier = jsonData.getString("identifier")
+                        d.bamaflex_course_id = jsonData.getInt("bamaflex_course_id")
+                        d.parent_bamaflex_course_id = jsonData.getInt("parent_bamaflex_course_id")
+                        d.chamilo_course_id = jsonData.getInt("chamilo_course_id")
+                        d.course_type = jsonData.getString("course_type")
+                        d.title = jsonData.getString("title")
+                        d.chamilo_course_code = jsonData.getString("chamilo_course_code")
+                        d.training_name = jsonData.getString("training_name")
+                        d.training_code = jsonData.getString("training_code")
+                        d.titular_name = jsonData.getString("titular_name")
+                        d.credits = jsonData.getInt("credits")
+                        d.subscribed_to_course = jsonData.getBoolean("subscribed_to_course")
+                        list.add(d)
+                    }
+                    callback(list, null)
+                } catch(ex: Exception){
+                    callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+                }
+            }
+            else
+                callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+        }
+    }
+
+    fun getAssignments(courseId: Int, callback: (ArrayList<AssignmentData>?, err: APIError?) -> Unit){
+        val formatter = SimpleDateFormat("dd/MM/yyyy' om 'HH:mm")
+
+        sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAssignment", constructHeaders(), null) {
+            result ->
+            if(result.statusCode == 200){
+                val assignmentIds = parseMultiBodyPart(result.body, "publication[]\" value=\"", "\"")
+                val results = ArrayList<AssignmentData>()
+
+                for(assignmentId in assignmentIds){
+                    val assign = AssignmentData()
+                    val assignmentBody = parseBodyPart(result.body, "Display&publication=$assignmentId", "<div class=\"clear\">&nbsp;</div></div></td>") ?: ""
+                    val tableColumns = parseMultiBodyPart(assignmentBody, "<td>", "</td>")
+
+                    assign.publicationId = assignmentId.toInt()
+                    if(tableColumns.size >= 7){
+                        assign.publicationDate = formatter.parse(tableColumns[1])
+                        assign.poster = tableColumns[3]
+                        assign.endTime = formatter.parse(tableColumns[5])
+                        assign.submissions = tableColumns[6]
+                        assign.submissionAllowed = assignmentBody.contains("assignment_display_action=Creator", true)
+                    }
+                    results.add(assign)
+                }
+
+                for(assign in results){
+                    sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAssignmentPublication${assign.publicationId}",
+                            constructHeaders(), null){
+                        result ->
+                        assign.title = parseBodyPart(result.body, "<h3 class=\"title-underlined\">", "</h3>") ?: ""
+                        assign.description = parseBodyPart(result.body, "<p>", "</p>") ?: ""
+                        assign.description = assign.description.replace("<br>", "\r\n")
+                        assign.description = assign.description.replace("<br/>", "\r\n")
+                        assign.description = StringEscapeUtils.unescapeHtml4(assign.description)
+
+                        assign._assignmentLoaded = true
+
+                        var ready = true
+                        for(assignment in results){
+                            if(!assignment._assignmentLoaded)
+                                ready = false
+                        }
+                        if(ready)
+                            callback(results, null)
+                    }
+                }
+            }
+            else
+                callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+        }
     }
 
     // Returns current session info (cookies) as a JSON string. The result can be passed to restoreSessionData()

@@ -37,4 +37,5 @@ dependencies {
     implementation 'com.github.jhonnyx2012:horizontal-picker:1.0.6'
     implementation 'info.hoang8f:android-segmented:1.0.6'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
+    implementation 'org.apache.commons:commons-lang3:3.8'
 }
