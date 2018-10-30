@@ -2,17 +2,21 @@ package be.pjrotsaert.mijnhogent.activities
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.util.Base64
 import android.view.Menu
 import android.view.MenuItem
 import be.pjrotsaert.mijnhogent.R
+import be.pjrotsaert.mijnhogent.api.Chamilo
 import be.pjrotsaert.mijnhogent.fragments.DayRosterFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_mainactivity.*
+import kotlinx.android.synthetic.main.nav_header_mainactivity.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -50,6 +54,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.nav_drawer, menu)
+
+        Chamilo.getInstance(this).getProfilePic { imgBase64, err ->
+            if(imgBase64.isNotEmpty()){
+                val data = Base64.decode(imgBase64, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+                profilePicView.setImageBitmap(bitmap)
+            }
+        }
+
+        txtFullName.text = Chamilo.getInstance(this).getUserFullName()
+        txtEmailAddress.text = Chamilo.getInstance(this).getUserEmailAddress()
         return true
     }
 
@@ -72,14 +87,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_assignments -> {
                 // Handle the camera action
             }
-            R.id.nav_ph -> {
+            R.id.nav_documents -> {
 
             }
-            R.id.nav_share -> {
+            R.id.nav_logout -> {
 
-            }
-            R.id.nav_send -> {
-
+                Chamilo.getInstance(this).logout {
+                    _ ->
+                    val prefs = getSharedPreferences("app", Context.MODE_PRIVATE)
+                    prefs.edit().remove("session").apply()
+                    startActivity(LoginActivity.createIntent(this))
+                    finish()
+                }
             }
         }
 

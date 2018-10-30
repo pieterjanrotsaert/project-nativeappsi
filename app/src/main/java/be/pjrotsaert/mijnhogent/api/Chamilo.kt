@@ -1,6 +1,7 @@
 package be.pjrotsaert.mijnhogent.api
 
 import android.content.Context
+import android.util.Base64
 import android.util.JsonWriter
 import be.pjrotsaert.mijnhogent.R
 import com.android.volley.*
@@ -130,9 +131,12 @@ class Chamilo {
     private val urlChamiloGetProfilePic = "$urlChamiloBase/index.php?application=Chamilo%5CCore%5CUser%5CAjax&go=UserPicture&user_id="
 
 
-    var cookies = HashMap<String, String>()
-    var cookieBlacklist = ArrayList<String>()
-    var userId = 0
+    private var cookies = HashMap<String, String>()
+    private var cookieBlacklist = ArrayList<String>()
+    private var userId = 0
+    private var userFullName = "Naam ongekend"
+    private var userEmailAddress = "E-Mail ongekend"
+    private var profileImageData = "" // Base64 encoded imagedata
 
     init {
         cookieBlacklist.add("domain")
@@ -229,7 +233,9 @@ class Chamilo {
 
         getActivities(calStart, calEnd, activityType){
             jsonString, err ->
-            try {
+            if(err != null)
+                callback(null, err)
+            else try {
                 val resultJson = JSONObject(jsonString)
                 if(resultJson.getString("result_message") != "OK")
                     callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
@@ -249,7 +255,6 @@ class Chamilo {
                         date = jsonData.getString("EndDateTime")
                         date = date.substring(0, date.indexOf("+"))
                         d.endDateTime = formatter.parse(date)
-
 
                         d.activityDescription = jsonData.getString("Activity_Description")
                         d.weekLabel = jsonData.getString("WeekLabel")
@@ -294,6 +299,33 @@ class Chamilo {
         }
     }
 
+    private fun downloadProfilePic(callback: (String, err: APIError?) -> Unit){
+        sendRequest(Request.Method.GET, "$urlChamiloGetProfilePic$userId", constructHeaders(), null){
+            result ->
+            if(result.statusCode == 200){
+                profileImageData = Base64.encodeToString(result.bodyBin, Base64.DEFAULT)
+                callback(profileImageData, null)
+            }
+            else
+                callback("", APIError(R.string.err_internal, R.string.err_internal_description))
+        }
+    }
+
+    fun getProfilePic(callback: (imgBase64: String, err:APIError?) -> Unit){
+        if(profileImageData.isNotEmpty())
+            callback(profileImageData, null)
+        else
+            downloadProfilePic(callback)
+    }
+
+    fun getUserFullName(): String {
+        return userFullName
+    }
+
+    fun getUserEmailAddress(): String {
+        return userEmailAddress
+    }
+
     // Returns current session info (cookies) as a JSON string. The result can be passed to restoreSessionData()
     fun getSessionData(): String {
         val json = JSONObject()
@@ -302,6 +334,9 @@ class Chamilo {
             cookieJson.put(pair.key, pair.value)
         json.put("cookies", cookieJson)
         json.put("userId", userId)
+        json.put("userFullName", userFullName)
+        json.put("userEmailAddress", userEmailAddress)
+        json.put("profileImageData", profileImageData)
         return json.toString()
     }
 
@@ -310,6 +345,9 @@ class Chamilo {
             val json = JSONObject(sessionData)
             val cookieJson = json.getJSONObject("cookies")
             userId = json.getInt("userId")
+            userFullName = json.getString("userFullName")
+            userEmailAddress = json.getString("userEmailAddress")
+            profileImageData = json.getString("profileImageData")
             for (k in cookieJson.keys())
                 cookies[k] = cookieJson.getString(k)
         }
@@ -317,7 +355,7 @@ class Chamilo {
         }
 
         // Test if the session is still valid by calling getActivities(), if it doesn't return an error, the session is still valid.
-        getActivities("1990-0-0", "1990-0-0", "lesson") { result, err ->
+        getActivities("1990-1-1", "1990-1-1", "lesson") { result, err ->
             if(err != null) {
                 userId = 0
                 cookies.clear() // Session restoration not successful, clear cookies.
@@ -386,6 +424,10 @@ class Chamilo {
                                                                             sendRequest(Request.Method.GET, urlChamiloHome, constructHeaders(), null) { result ->
                                                                                 val idStr = parseBodyPart(result.body, "user_id=", "\"") ?: ""
                                                                                 userId = idStr.toIntOrNull() ?: 0
+                                                                                userFullName = parseBodyPart(result.body, "account-data-name\">", "<") ?: "Naam ongekend"
+                                                                                userEmailAddress = parseBodyPart(result.body, "account-data-email\">", "<") ?: "E-mail ongekend"
+                                                                                profileImageData = ""
+
                                                                                 callback(null)
                                                                             }
                                                                         }

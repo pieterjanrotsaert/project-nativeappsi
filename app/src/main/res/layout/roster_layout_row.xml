@@ -2,6 +2,7 @@
 
 <TableRow
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -23,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="13:30 - 17:45"
+                android:text="xx"
                 android:textStyle="bold" />
 
             <TextView
@@ -31,7 +32,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="GAARB.0.032"
+                android:text="xx"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -47,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Analyse III (2u/3u)"
+                android:text="xx"
                 android:textStyle="bold" />
 
             <TextView
@@ -55,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Van Herreweghe Joeri"
+                android:text="xx"
                 android:textSize="12sp" />
 
         </LinearLayout>

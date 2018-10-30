@@ -36,4 +36,5 @@ dependencies {
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'com.github.jhonnyx2012:horizontal-picker:1.0.6'
     implementation 'info.hoang8f:android-segmented:1.0.6'
+    implementation 'de.hdodenhof:circleimageview:2.2.0'
 }

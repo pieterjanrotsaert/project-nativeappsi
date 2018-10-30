@@ -1,6 +1,5 @@
 package be.pjrotsaert.mijnhogent.api
 
-import org.joda.time.DateTime
 import java.util.*
 
 class ActivityData {

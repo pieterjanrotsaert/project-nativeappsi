@@ -69,7 +69,8 @@ class RosterAdapter(data: ArrayList<ActivityDayViewModel>): RecyclerView.Adapter
             val txtSubject = row.findViewById<TextView>(R.id.txtSubjectName)
             val txtTeacher = row.findViewById<TextView>(R.id.txtTeacher)
 
-            txtTime.text = "${activity.startDateTime.hours}:${activity.startDateTime.minutes} - ${activity.endDateTime.hours}:${activity.endDateTime.minutes}"
+
+            txtTime.text = "${SimpleDateFormat("HH:mm").format(activity.startDateTime)} - ${SimpleDateFormat("HH:mm").format(activity.endDateTime)}"
             txtSubject.text = activity.activityDescription
             txtTeacher.text = activity.staffDescription
             txtLocation.text = activity.locationDescription
