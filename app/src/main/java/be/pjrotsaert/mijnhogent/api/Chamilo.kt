@@ -392,6 +392,8 @@ class Chamilo {
         }
     }
 
+    // Retrieves all assignments for a given course
+    // WARNING: This function has to send multiple requests and may take a while to complete. (Unfortunately chamilo doesn't have a proper REST API)
     fun getAssignments(courseId: Int, callback: (ArrayList<AssignmentData>?, err: APIError?) -> Unit){
         val formatter = SimpleDateFormat("dd/MM/yyyy' om 'HH:mm")
 
@@ -441,6 +443,28 @@ class Chamilo {
             }
             else
                 callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+        }
+    }
+
+    // Populate each CourseData object with its relevant assignments
+    fun getAllAssignments(courses: ArrayList<CourseData>, callback: (err: APIError?) -> Unit){
+
+        var nCompleted = 0
+        for(course in courses){
+            getAssignments(course.chamilo_course_id){
+                result, err ->
+
+                if(result != null)
+                    course.assignments = result
+                else {
+                    callback(err)
+                    return@getAssignments
+                }
+
+                nCompleted++
+                if(nCompleted == courses.size)
+                    callback(null)
+            }
         }
     }
 

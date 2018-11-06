@@ -17,4 +17,6 @@ class CourseData {
     var teacher_in_course = false
     var allowed_to_create = false
     var allowed_to_delete = false
+
+    var assignments = ArrayList<AssignmentData>()
 }

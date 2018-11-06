@@ -5,21 +5,25 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_summary"
+            android:icon="@drawable/ic_dashboard_black_24dp"
+            android:title="@string/menu_summary"
+            android:checked="true"/>
+        <item
             android:id="@+id/nav_rosters"
             android:icon="@drawable/ic_date_range_black_24dp"
-            android:title="@string/menu_rosters"
-            android:checked="true"/>
+            android:title="@string/menu_rosters"/>
         <item
             android:id="@+id/nav_assignments"
             android:icon="@drawable/ic_assignment_black_24dp"
             android:title="@string/menu_assignments" />
         <item
-            android:id="@+id/nav_documents"
-            android:icon="@drawable/ic_folder_black_24dp"
-            android:title="@string/menu_documents" />
+            android:id="@+id/nav_announcements"
+            android:icon="@drawable/ic_notifications_black_24dp"
+            android:title="@string/menu_announcements" />
     </group>
 
-    <item android:title="@string/menu_other">
+    <item android:title="@string/menu_account">
         <menu>
             <item
                 android:id="@+id/nav_logout"

@@ -5,4 +5,5 @@
     <color name="colorAccent">#ffa000</color>
     <color name="textwhite">#ffffff</color>
     <color name="separatorColor">#bdbdbd</color>
+    <color name="textBlack">#000000</color>
 </resources>

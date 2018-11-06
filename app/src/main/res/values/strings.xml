@@ -26,21 +26,24 @@
     <string name="error_invalid_password">Het wachtwoord is ongeldig.</string>
     <string name="error_incorrect_password">Wachtwoord onjuist.</string>
     <string name="error_field_required">Gelieve dit veld in te vullen.</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
-    <string name="title_activity_nav_drawer">NavDrawer</string>
+    <string name="title_activity_nav_drawer">Mijn Hogent</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Instellingen</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="logout">Afmelden</string>
     <string name="menu_other">Andere</string>
     <string name="menu_rosters">Lessenrooster</string>
     <string name="menu_assignments">Opdrachten</string>
     <string name="menu_documents">Documenten</string>
+    <string name="assignment_title">Opdracht:</string>
+    <string name="assignment_description">Beschrijving:</string>
+    <string name="deadline">Deadline:</string>
+    <string name="menu_summary">Overzicht</string>
+    <string name="menu_announcements">Aankondigingen</string>
+    <string name="menu_account">Account</string>
 
 </resources>

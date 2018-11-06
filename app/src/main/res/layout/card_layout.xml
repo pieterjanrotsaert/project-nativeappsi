@@ -33,7 +33,7 @@
                 app:srcCompat="@color/colorPrimaryDark" />
 
             <TextView
-                android:id="@+id/dateLabel"
+                android:id="@+id/txtCardTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -43,7 +43,7 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginBottom="8dp"
                 android:gravity="center_vertical|center_horizontal"
-                android:text="Maandag DD/MM/YYYY"
+                android:text="Title"
                 android:textColor="@color/textwhite"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -53,11 +53,10 @@
         </android.support.constraint.ConstraintLayout>
 
         <TableLayout
-            android:id="@+id/activityTable"
+            android:id="@+id/cardContentTable"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="4dp">
-
         </TableLayout>
 
     </LinearLayout>

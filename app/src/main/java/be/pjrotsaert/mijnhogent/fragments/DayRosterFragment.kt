@@ -122,5 +122,4 @@ class DayRosterFragment : Fragment(), DatePickerListener {
             rosterRecycler.adapter?.notifyDataSetChanged()
         }
     }
-
 }

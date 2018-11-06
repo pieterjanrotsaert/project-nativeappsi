@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import be.pjrotsaert.mijnhogent.viewmodels.ActivityDayViewModel
 import android.view.LayoutInflater
 import android.widget.TableLayout
-import android.widget.TableRow
 import android.widget.TextView
 import be.pjrotsaert.mijnhogent.R
 import java.text.SimpleDateFormat
@@ -22,14 +21,14 @@ class RosterAdapter(data: ArrayList<ActivityDayViewModel>): RecyclerView.Adapter
         val activityTable: TableLayout
 
         constructor(view: View): super(view) {
-            dateLabel = view.findViewById(R.id.dateLabel)
-            activityTable = view.findViewById(R.id.activityTable)
+            dateLabel = view.findViewById(R.id.txtCardTitle)
+            activityTable = view.findViewById(R.id.cardContentTable)
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityViewHolder {
         val itemView = LayoutInflater.from(parent.context)
-                .inflate(R.layout.roster_layout, parent, false)
+                .inflate(R.layout.card_layout, parent, false)
         return ActivityViewHolder(itemView)
     }
 
@@ -60,7 +59,7 @@ class RosterAdapter(data: ArrayList<ActivityDayViewModel>): RecyclerView.Adapter
         for(activity in model.activities){
 
             if(addSeparator)
-                holder.activityTable.addView(inflater.inflate(R.layout.roster_layout_row_separator, holder.activityTable, false))
+                holder.activityTable.addView(inflater.inflate(R.layout.layout_row_separator, holder.activityTable, false))
 
             val row = inflater.inflate(R.layout.roster_layout_row, holder.activityTable, false)
 
