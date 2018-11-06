@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private var summaryFragment         = CoursesFragment.newInstance()
+    private var coursesFragment         = CoursesFragment.newInstance()
     private var dayRosterFragment       = RostersFragment.newInstance()
     private var announcementsFragment   = AnnouncementsFragment.newInstance()
     private var assignmentsFragment     = AssignmentsFragment.newInstance()
@@ -46,8 +46,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
-        supportFragmentManager.beginTransaction().replace(R.id.contentFrame, summaryFragment).commit() // Set initial fragment to the 'summary' fragment.
-        toolbar.title = getString(R.string.menu_summary)
+        supportFragmentManager.beginTransaction().replace(R.id.contentFrame, coursesFragment).commit() // Set initial fragment to the 'summary' fragment.
+        toolbar.title = getString(R.string.menu_courses)
     }
 
     override fun onBackPressed() {
@@ -89,9 +89,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.nav_summary -> {
-                supportFragmentManager.beginTransaction().replace(R.id.contentFrame, summaryFragment).commit()
-                toolbar.title = getString(R.string.menu_summary)
+            R.id.nav_courses -> {
+                supportFragmentManager.beginTransaction().replace(R.id.contentFrame, coursesFragment).commit()
+                toolbar.title = getString(R.string.menu_courses)
             }
             R.id.nav_rosters -> {
                 supportFragmentManager.beginTransaction().replace(R.id.contentFrame, dayRosterFragment).commit()

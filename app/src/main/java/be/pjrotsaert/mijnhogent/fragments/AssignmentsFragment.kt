@@ -49,7 +49,7 @@ class AssignmentsFragment : Fragment() {
         assignmentRefreshPull.isRefreshing = true
         Chamilo.getInstance(context!!).getCourses { courses, err ->
             if(courses != null){
-                Chamilo.getInstance(context!!).getAllAssignments(courses, true) { err ->
+                Chamilo.getInstance(context!!).getAllAssignments(courses, false) { err ->
                     if(err == null){
                         viewModel.assignments.clear()
 

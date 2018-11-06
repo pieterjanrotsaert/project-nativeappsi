@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.CoursesFragment">
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8sp"
+                        android:paddingTop="8sp"
+                        android:paddingRight="8sp"
+                        android:text="@string/my_courses"
+                        android:textColor="@color/primaryTextColor"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtTotalCredits"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8sp"
+                        android:paddingRight="8sp"
+                        android:paddingBottom="8sp"
+                        android:text="@string/total_credits"
+                        android:textColor="@color/primaryTextColor" />
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/coursesRefreshPull"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:background="@color/today_border">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/coursesRecycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent" />
+
+            </android.support.v4.widget.SwipeRefreshLayout>
+
+        </LinearLayout>
+
+</FrameLayout>

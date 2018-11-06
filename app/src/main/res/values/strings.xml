@@ -45,5 +45,8 @@
     <string name="menu_summary">Overzicht</string>
     <string name="menu_announcements">Aankondigingen</string>
     <string name="menu_account">Account</string>
+    <string name="menu_courses">Cursussen</string>
+    <string name="my_courses">Mijn Cursussen</string>
+    <string name="total_credits">Totaal aantal studiepunten:</string>
 
 </resources>

@@ -486,6 +486,10 @@ class Chamilo {
 
     private fun parseDescription(description: String): String {
         var desc = description
+
+        if(desc.trim().isEmpty())
+            return "/"
+
         desc = desc.replace("&nbsp;", " ")
         desc = desc.replace("</p>", "\n")
         desc = desc.replace("<br>", "\n")
