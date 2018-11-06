@@ -1,48 +1,45 @@
 package be.pjrotsaert.mijnhogent.fragments
 
 import android.arch.lifecycle.ViewModelProviders
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import be.pjrotsaert.mijnhogent.viewmodels.DayRosterViewModel
+import be.pjrotsaert.mijnhogent.viewmodels.RostersViewModel
 import be.pjrotsaert.mijnhogent.R
 import be.pjrotsaert.mijnhogent.adapters.RosterAdapter
-import be.pjrotsaert.mijnhogent.api.APIError
 import be.pjrotsaert.mijnhogent.api.ActivityData
 import be.pjrotsaert.mijnhogent.api.Chamilo
 import be.pjrotsaert.mijnhogent.viewmodels.ActivityDayViewModel
 import com.github.jhonnyx2012.horizontalpicker.DatePickerListener
-import kotlinx.android.synthetic.main.day_roster_fragment.*
+import kotlinx.android.synthetic.main.rosters_fragment.*
 import org.joda.time.DateTime
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class DayRosterFragment : Fragment(), DatePickerListener {
+class RostersFragment : Fragment(), DatePickerListener {
 
     companion object {
-        fun newInstance(): DayRosterFragment {
-            return DayRosterFragment()
+        fun newInstance(): RostersFragment {
+            return RostersFragment()
         }
     }
 
-    private lateinit var viewModel: DayRosterViewModel
+    private lateinit var viewModel: RostersViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.day_roster_fragment, container, false)
+        return inflater.inflate(R.layout.rosters_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(DayRosterViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(RostersViewModel::class.java)
         datePicker.setListener(this).init()
         datePicker.setDate(viewModel.currentDate)
 
@@ -75,6 +72,7 @@ class DayRosterFragment : Fragment(), DatePickerListener {
         rosterRecycler.layoutManager = LinearLayoutManager(context)
         rosterRecycler.itemAnimator = DefaultItemAnimator()
         rosterRecycler.adapter = RosterAdapter(viewModel.dayList)
+        rosterRecycler.adapter?.notifyDataSetChanged()
         requestActivities()
     }
 

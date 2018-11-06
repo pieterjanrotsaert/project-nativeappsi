@@ -10,11 +10,11 @@ import android.view.ViewGroup
 import be.pjrotsaert.mijnhogent.R
 import be.pjrotsaert.mijnhogent.viewmodels.SummaryViewModel
 
-class SummaryFragment : Fragment() {
+class CoursesFragment : Fragment() {
 
     companion object {
-        fun newInstance(): SummaryFragment {
-            return SummaryFragment()
+        fun newInstance(): CoursesFragment {
+            return CoursesFragment()
         }
     }
 

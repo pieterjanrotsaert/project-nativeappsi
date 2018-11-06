@@ -15,8 +15,8 @@ import be.pjrotsaert.mijnhogent.R
 import be.pjrotsaert.mijnhogent.api.Chamilo
 import be.pjrotsaert.mijnhogent.fragments.AnnouncementsFragment
 import be.pjrotsaert.mijnhogent.fragments.AssignmentsFragment
-import be.pjrotsaert.mijnhogent.fragments.DayRosterFragment
-import be.pjrotsaert.mijnhogent.fragments.SummaryFragment
+import be.pjrotsaert.mijnhogent.fragments.RostersFragment
+import be.pjrotsaert.mijnhogent.fragments.CoursesFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_mainactivity.*
 import kotlinx.android.synthetic.main.nav_header_mainactivity.*
@@ -30,8 +30,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private var summaryFragment         = SummaryFragment.newInstance()
-    private var dayRosterFragment       = DayRosterFragment.newInstance()
+    private var summaryFragment         = CoursesFragment.newInstance()
+    private var dayRosterFragment       = RostersFragment.newInstance()
     private var announcementsFragment   = AnnouncementsFragment.newInstance()
     private var assignmentsFragment     = AssignmentsFragment.newInstance()
 

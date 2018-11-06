@@ -2,26 +2,21 @@ package be.pjrotsaert.mijnhogent.api
 
 import android.content.Context
 import android.util.Base64
-import android.util.JsonWriter
 import be.pjrotsaert.mijnhogent.R
 import com.android.volley.*
 import com.android.volley.toolbox.HttpHeaderParser
-import com.android.volley.toolbox.Volley
-import java.io.UnsupportedEncodingException
-import java.nio.charset.Charset
 import com.android.volley.toolbox.HurlStack
+import com.android.volley.toolbox.Volley
 import org.apache.commons.lang3.StringEscapeUtils
 import org.joda.time.DateTime
 import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.Exception
+import java.io.UnsupportedEncodingException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLDecoder
+import java.nio.charset.Charset
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.*
-import java.util.function.IntToDoubleFunction
 
 
 class Chamilo {
@@ -53,6 +48,10 @@ class Chamilo {
 
         override fun getParams(): MutableMap<String, String> {
             return params
+        }
+
+        override fun getPriority(): Priority {
+            return Priority.IMMEDIATE
         }
 
         override fun getHeaders(): MutableMap<String, String> = headers ?: super.getHeaders()
@@ -160,7 +159,7 @@ class Chamilo {
 
     private val urlChamiloSuffixGetAssignmentPublication    = "&tool=Assignment&browser=Table&tool_action=Display&publication="
     private val urlChamiloSuffixGetAssignment               = "&tool=Assignment"
-
+    private val urlChamiloSuffixGetAnnouncement             = "&tool=Announcement"
 
     private var cookies = HashMap<String, String>()
     private var cookieBlacklist = ArrayList<String>()
@@ -393,8 +392,9 @@ class Chamilo {
     }
 
     // Retrieves all assignments for a given course
-    // WARNING: This function has to send multiple requests and may take a while to complete. (Unfortunately chamilo doesn't have a proper REST API)
-    fun getAssignments(courseId: Int, callback: (ArrayList<AssignmentData>?, err: APIError?) -> Unit){
+    // WARNING: This function has to send multiple requests and may take a while to complete. (Unfortunately chamilo doesn't have a proper REST API to retrieve all data at once)
+    //          if 'quickFetch' is set to true, this function will complete much faster, but some stuff like titles & descriptions may be incomplete.
+    fun getAssignments(courseId: Int, quickFetch: Boolean, callback: (ArrayList<AssignmentData>?, err: APIError?) -> Unit){
         val formatter = SimpleDateFormat("dd/MM/yyyy' om 'HH:mm")
 
         sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAssignment", constructHeaders(), null) {
@@ -408,10 +408,13 @@ class Chamilo {
                     val assign = AssignmentData()
                     assign.subjectName = courseName
                     val assignmentBody = parseBodyPart(result.body, "Display&publication=$assignmentId", "<div class=\"clear\">&nbsp;</div></div></td>") ?: ""
+                    assign.title = parseBodyPart(assignmentBody, ">", "</a>") ?: ""
+
                     val tableColumns = parseMultiBodyPart(assignmentBody, "<td>", "</td>")
 
                     assign.publicationId = assignmentId.toInt()
                     if(tableColumns.size >= 7){
+                        assign.description = tableColumns[0]
                         assign.publicationDate = formatter.parse(tableColumns[1])
                         assign.poster = tableColumns[3]
                         assign.endTime = formatter.parse(tableColumns[5])
@@ -421,23 +424,17 @@ class Chamilo {
                     results.add(assign)
                 }
 
-                if(results.size == 0)
+                if(quickFetch)
+                    callback(results, null)
+                else if(results.size == 0)
                     callback(results, null)
                 else for(assign in results){
                     sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAssignmentPublication${assign.publicationId}",
                             constructHeaders(), null){
                         result ->
                         assign.title = parseBodyPart(result.body, "id=\"assignment\">\n        <h3 class=\"title-underlined\">", "</h3>") ?: ""
-                        val descriptionParagraphs = parseMultiBodyPart(result.body, "<p>", "</p>")
-                        assign.description = ""
-                        for(para in descriptionParagraphs){
-                            assign.description += para + "\n"
-                        }
-                        assign.description = assign.description.replace("<br>", "\r\n")
-                        assign.description = assign.description.replace("<br/>", "\r\n")
-                        assign.description = StringEscapeUtils.unescapeHtml4(assign.description)
+                        assign.description = parseDescription(parseBodyPart(result.body, "<div style=\"overflow: auto;\">", "<html>") ?: "")
                         assign.submitted = result.body.contains("submitted-details")
-
                         assign._assignmentLoaded = true
 
                         var ready = true
@@ -455,12 +452,58 @@ class Chamilo {
         }
     }
 
-    // Populate each CourseData object with its relevant assignments
-    fun getAllAssignments(courses: ArrayList<CourseData>, callback: (err: APIError?) -> Unit){
+    // Retrieves all announcements for a given course
+    fun getAnnouncements(courseId: Int, callback: (ArrayList<AnnouncementData>?, err: APIError?) -> Unit){
+        val formatter = SimpleDateFormat("dd/MM/yyyy' om 'HH:mm")
+        sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAnnouncement", constructHeaders(), null) {
+            result ->
+            if(result.statusCode == 200){
+                val publicationIds   = parseMultiBodyPart(result.body, "Viewer&publication=", "\"")
+                val publicationTimes = parseMultiBodyPart(result.body, "glyphicon-time\"></span>\n", "\n")
 
+                val results = ArrayList<AnnouncementData>()
+                val courseName = parseBodyPart(result.body, "course=$courseId\" target=\"_self\">", "</a>") ?: "courseName"
+
+                for((curIdx, pubId) in publicationIds.withIndex()){
+                    val announce = AnnouncementData()
+                    announce.subjectName = courseName
+                    announce.publicationId = pubId.toInt()
+                    announce.publicationDate = formatter.parse(publicationTimes[curIdx])
+
+                    val announcementBody = parseBodyPart(result.body, "Viewer&publication=$pubId\"", "<body>") ?: ""
+                    announce.title = parseBodyPart(announcementBody, ">", "</a>") ?: ""
+                    announce.poster = parseBodyPart(announcementBody, "<small>", "</small>") ?: ""
+                    announce.description = parseDescription(parseBodyPart(announcementBody, "<div style=\"overflow: auto;\">", "<html>") ?: "")
+                    results.add(announce)
+                }
+
+                callback(results, null)
+            }
+            else
+                callback(null, APIError(R.string.err_internal, R.string.err_internal_description))
+        }
+    }
+
+    private fun parseDescription(description: String): String {
+        var desc = description
+        desc = desc.replace("&nbsp;", " ")
+        desc = desc.replace("</p>", "\n")
+        desc = desc.replace("<br>", "\n")
+        desc = desc.replace("<br/>", "\n")
+
+        desc = desc.replace(Regex("<(.|\\n|\\r)*?>"), "")
+
+        desc = StringEscapeUtils.unescapeHtml4(desc)
+        if(desc.trim().isEmpty())
+            desc = "Inhoud kan niet weergegeven worden."
+        return desc
+    }
+
+    // Populate each CourseData object with its relevant assignments
+    fun getAllAssignments(courses: ArrayList<CourseData>, quickFetch: Boolean, callback: (err: APIError?) -> Unit){
         var nCompleted = 0
         for(course in courses){
-            getAssignments(course.chamilo_course_id){
+            getAssignments(course.chamilo_course_id, quickFetch){
                 result, err ->
 
                 if(result != null)
@@ -468,6 +511,27 @@ class Chamilo {
                 else {
                     callback(err)
                     return@getAssignments
+                }
+
+                nCompleted++
+                if(nCompleted == courses.size)
+                    callback(null)
+            }
+        }
+    }
+
+    // Populate each CourseData object with its relevant announcements
+    fun getAllAnnouncements(courses: ArrayList<CourseData>, callback: (err: APIError?) -> Unit){
+        var nCompleted = 0
+        for(course in courses){
+            getAnnouncements(course.chamilo_course_id){
+                result, err ->
+
+                if(result != null)
+                    course.announcements = result
+                else {
+                    callback(err)
+                    return@getAnnouncements
                 }
 
                 nCompleted++

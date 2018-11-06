@@ -39,14 +39,17 @@ class AssignmentsFragment : Fragment() {
         assignmentRecycler.layoutManager = LinearLayoutManager(context)
         assignmentRecycler.itemAnimator = DefaultItemAnimator()
         assignmentRecycler.adapter = AssignmentAdapter(viewModel.assignments)
-        requestAssignments()
+        assignmentRecycler.adapter?.notifyDataSetChanged()
+
+        if(viewModel.assignments.size <= 0)
+            requestAssignments()
     }
 
     fun requestAssignments(){
         assignmentRefreshPull.isRefreshing = true
         Chamilo.getInstance(context!!).getCourses { courses, err ->
             if(courses != null){
-                Chamilo.getInstance(context!!).getAllAssignments(courses) { err ->
+                Chamilo.getInstance(context!!).getAllAssignments(courses, true) { err ->
                     if(err == null){
                         viewModel.assignments.clear()
 
@@ -73,5 +76,4 @@ class AssignmentsFragment : Fragment() {
 
         }
     }
-
 }

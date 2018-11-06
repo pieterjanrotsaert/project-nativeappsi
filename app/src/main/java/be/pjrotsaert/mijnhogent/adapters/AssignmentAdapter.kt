@@ -13,11 +13,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class AssignmentAdapter(data: ArrayList<AssignmentData>): RecyclerView.Adapter<AssignmentAdapter.ActivityViewHolder>() {
+class AssignmentAdapter(data: ArrayList<AssignmentData>): RecyclerView.Adapter<AssignmentAdapter.AssignmentViewHolder>() {
 
     private val assignmentList: ArrayList<AssignmentData> = data
 
-    class ActivityViewHolder: RecyclerView.ViewHolder {
+    class AssignmentViewHolder: RecyclerView.ViewHolder {
         val cardTitle: TextView
         val subjectName: TextView
         val endDate: TextView
@@ -33,17 +33,17 @@ class AssignmentAdapter(data: ArrayList<AssignmentData>): RecyclerView.Adapter<A
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AssignmentViewHolder {
         val itemView = LayoutInflater.from(parent.context)
                 .inflate(R.layout.single_assignment_layout, parent, false)
-        return ActivityViewHolder(itemView)
+        return AssignmentViewHolder(itemView)
     }
 
     override fun getItemCount(): Int {
         return assignmentList.size
     }
 
-    override fun onBindViewHolder(holder: ActivityViewHolder, index: Int) {
+    override fun onBindViewHolder(holder: AssignmentViewHolder, index: Int) {
         val model = assignmentList[index]
 
         val now = DateTime.now().toLocalDate().toDate()

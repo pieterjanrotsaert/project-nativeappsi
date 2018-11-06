@@ -59,9 +59,9 @@ class RosterAdapter(data: ArrayList<ActivityDayViewModel>): RecyclerView.Adapter
         for(activity in model.activities){
 
             if(addSeparator)
-                holder.activityTable.addView(inflater.inflate(R.layout.layout_row_separator, holder.activityTable, false))
+                holder.activityTable.addView(inflater.inflate(R.layout.table_row_separator, holder.activityTable, false))
 
-            val row = inflater.inflate(R.layout.roster_layout_row, holder.activityTable, false)
+            val row = inflater.inflate(R.layout.roster_table_row, holder.activityTable, false)
 
             val txtTime = row.findViewById<TextView>(R.id.txtTime)
             val txtLocation = row.findViewById<TextView>(R.id.txtLocation)

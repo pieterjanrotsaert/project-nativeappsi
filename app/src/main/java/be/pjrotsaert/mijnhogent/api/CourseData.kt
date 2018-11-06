@@ -19,4 +19,5 @@ class CourseData {
     var allowed_to_delete = false
 
     var assignments = ArrayList<AssignmentData>()
+    var announcements = ArrayList<AnnouncementData>()
 }

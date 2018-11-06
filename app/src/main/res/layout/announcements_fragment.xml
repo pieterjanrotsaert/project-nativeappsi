@@ -5,9 +5,17 @@
     android:layout_height="match_parent"
     tools:context=".fragments.AnnouncementsFragment">
 
-    <TextView
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/announcementsRefreshPull"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_height="fill_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/announcementsRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:background="@color/today_border" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
 </FrameLayout>
