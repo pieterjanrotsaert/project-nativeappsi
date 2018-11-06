@@ -402,9 +402,11 @@ class Chamilo {
             if(result.statusCode == 200){
                 val assignmentIds = parseMultiBodyPart(result.body, "publication[]\" value=\"", "\"")
                 val results = ArrayList<AssignmentData>()
+                val courseName = parseBodyPart(result.body, "course=$courseId\" target=\"_self\">", "</a>") ?: "courseName"
 
                 for(assignmentId in assignmentIds){
                     val assign = AssignmentData()
+                    assign.subjectName = courseName
                     val assignmentBody = parseBodyPart(result.body, "Display&publication=$assignmentId", "<div class=\"clear\">&nbsp;</div></div></td>") ?: ""
                     val tableColumns = parseMultiBodyPart(assignmentBody, "<td>", "</td>")
 
@@ -419,15 +421,22 @@ class Chamilo {
                     results.add(assign)
                 }
 
-                for(assign in results){
+                if(results.size == 0)
+                    callback(results, null)
+                else for(assign in results){
                     sendRequest(Request.Method.GET, "$urlChamiloGetCourse$courseId$urlChamiloSuffixGetAssignmentPublication${assign.publicationId}",
                             constructHeaders(), null){
                         result ->
-                        assign.title = parseBodyPart(result.body, "<h3 class=\"title-underlined\">", "</h3>") ?: ""
-                        assign.description = parseBodyPart(result.body, "<p>", "</p>") ?: ""
+                        assign.title = parseBodyPart(result.body, "id=\"assignment\">\n        <h3 class=\"title-underlined\">", "</h3>") ?: ""
+                        val descriptionParagraphs = parseMultiBodyPart(result.body, "<p>", "</p>")
+                        assign.description = ""
+                        for(para in descriptionParagraphs){
+                            assign.description += para + "\n"
+                        }
                         assign.description = assign.description.replace("<br>", "\r\n")
                         assign.description = assign.description.replace("<br/>", "\r\n")
                         assign.description = StringEscapeUtils.unescapeHtml4(assign.description)
+                        assign.submitted = result.body.contains("submitted-details")
 
                         assign._assignmentLoaded = true
 

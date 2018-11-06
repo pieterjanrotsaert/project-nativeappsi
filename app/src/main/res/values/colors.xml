@@ -6,4 +6,5 @@
     <color name="textwhite">#ffffff</color>
     <color name="separatorColor">#bdbdbd</color>
     <color name="textBlack">#000000</color>
+    <color name="textRed">#bb0000</color>
 </resources>
