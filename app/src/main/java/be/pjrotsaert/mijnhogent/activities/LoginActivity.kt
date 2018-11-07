@@ -54,7 +54,7 @@ class LoginActivity : AppCompatActivity() {
         if(prefs.contains("username"))
             email.setText(prefs.getString("username", ""))
         if(prefs.contains("password"))
-            email.setText(prefs.getString("password", ""))
+            password.setText(prefs.getString("password", ""))
     }
 
     /**

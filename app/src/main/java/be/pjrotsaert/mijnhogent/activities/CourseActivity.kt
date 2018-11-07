@@ -3,7 +3,6 @@ package be.pjrotsaert.mijnhogent.activities
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -59,7 +58,7 @@ class CourseActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true);
         supportActionBar?.setDisplayShowHomeEnabled(true);
 
-        courseData = JSON.parse(intent.getStringExtra(EXTRA_COURSE_DATA))
+        courseData = JSON.parse(CourseData.serializer(), intent.getStringExtra(EXTRA_COURSE_DATA))
         toolbar.title = courseData.title
 
         // Create the adapter that will return a fragment for each of the three
