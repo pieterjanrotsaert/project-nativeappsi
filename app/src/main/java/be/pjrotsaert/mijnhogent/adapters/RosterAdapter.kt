@@ -1,5 +1,6 @@
 package be.pjrotsaert.mijnhogent.adapters
 
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,8 @@ import android.view.LayoutInflater
 import android.widget.TableLayout
 import android.widget.TextView
 import be.pjrotsaert.mijnhogent.R
+import be.pjrotsaert.mijnhogent.activities.CourseActivity
+import be.pjrotsaert.mijnhogent.api.CourseData
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -68,6 +71,11 @@ class RosterAdapter(data: ArrayList<ActivityDayViewModel>): RecyclerView.Adapter
             val txtSubject = row.findViewById<TextView>(R.id.txtSubjectName)
             val txtTeacher = row.findViewById<TextView>(R.id.txtTeacher)
 
+            /*val course = CourseData()
+            course.chamilo_course_id = activity.
+            row.setOnClickListener {
+                ContextCompat.startActivity(holder.layout.context, CourseActivity.newIntent(holder.layout.context, course), null)
+            }*/
 
             txtTime.text = "${SimpleDateFormat("HH:mm").format(activity.startDateTime)} - ${SimpleDateFormat("HH:mm").format(activity.endDateTime)}"
             txtSubject.text = activity.activityDescription

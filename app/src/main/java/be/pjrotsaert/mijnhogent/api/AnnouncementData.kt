@@ -9,4 +9,6 @@ class AnnouncementData {
     var poster = ""
     var publicationId = 0
     var publicationDate = Date()
+    var courseId = 0
+    var course = CourseData()
 }

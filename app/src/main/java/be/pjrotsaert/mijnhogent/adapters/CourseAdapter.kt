@@ -1,5 +1,7 @@
 package be.pjrotsaert.mijnhogent.adapters
 
+import android.support.constraint.ConstraintLayout
+import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import be.pjrotsaert.mijnhogent.R
+import be.pjrotsaert.mijnhogent.activities.CourseActivity
 import be.pjrotsaert.mijnhogent.api.CourseData
 
 class CourseAdapter(data: ArrayList<CourseData>): RecyclerView.Adapter<CourseAdapter.CourseViewHolder>() {
@@ -19,6 +22,7 @@ class CourseAdapter(data: ArrayList<CourseData>): RecyclerView.Adapter<CourseAda
         val courseType: TextView
         val sp: TextView
         val separator: ImageView
+        val layout: ConstraintLayout
 
         constructor(view: View): super(view) {
             courseName      = view.findViewById(R.id.txtName)
@@ -26,6 +30,7 @@ class CourseAdapter(data: ArrayList<CourseData>): RecyclerView.Adapter<CourseAda
             courseType      = view.findViewById(R.id.txtType)
             sp              = view.findViewById(R.id.txtSP)
             separator       = view.findViewById(R.id.courseSeparator)
+            layout          = view.findViewById(R.id.courseEntryLayout)
         }
     }
 
@@ -50,5 +55,9 @@ class CourseAdapter(data: ArrayList<CourseData>): RecyclerView.Adapter<CourseAda
             holder.separator.visibility = View.INVISIBLE
         else
             holder.separator.visibility = View.VISIBLE
+
+        holder.layout.setOnClickListener {
+            startActivity(holder.layout.context, CourseActivity.newIntent(holder.layout.context, model), null)
+        }
     }
 }

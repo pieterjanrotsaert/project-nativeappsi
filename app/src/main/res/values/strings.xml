@@ -48,5 +48,15 @@
     <string name="menu_courses">Cursussen</string>
     <string name="my_courses">Mijn Cursussen</string>
     <string name="total_credits">Totaal aantal studiepunten:</string>
+    <string name="title_activity_course">Cursus</string>
+    <string name="course_tab_text_1">Info</string>
+    <string name="course_tab_text_2">Aankondigingen</string>
+    <string name="course_tab_text_3">Opdrachten</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="course_nodescription">Er is geen beschrijving voor dit opleidingsonderdeel.</string>
+    <string name="course_titular">Titularis:</string>
+    <string name="course_creditcount">Aantal Studiepunten:</string>
+    <string name="course_edu">Opleiding:</string>
+    <string name="course_code">Cursuscode:</string>
 
 </resources>

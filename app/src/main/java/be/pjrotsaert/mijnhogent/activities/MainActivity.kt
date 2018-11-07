@@ -32,8 +32,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private var coursesFragment         = CoursesFragment.newInstance()
     private var dayRosterFragment       = RostersFragment.newInstance()
-    private var announcementsFragment   = AnnouncementsFragment.newInstance()
-    private var assignmentsFragment     = AssignmentsFragment.newInstance()
+    private var announcementsFragment   = AnnouncementsFragment.newInstance(0, true)
+    private var assignmentsFragment     = AssignmentsFragment.newInstance(0, true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.nav_drawer, menu)
+        //menuInflater.inflate(R.menu.nav_drawer, menu)
 
         // Get the profile picture and put it in the drawer menu.
         Chamilo.getInstance(this).getProfilePic { imgBase64, err ->

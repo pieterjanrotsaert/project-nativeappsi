@@ -33,10 +33,12 @@
                                   </option>
                                   <option name="values">
                                     <map>
+                                      <entry key="backgroundAssetType" value="COLOR" />
+                                      <entry key="backgroundColor" value="1976d2" />
                                       <entry key="backgroundLayerName" value="ic_launcher_background" />
-                                      <entry key="foregroundImage" value="C:\Users\Pieterjan\Desktop\Schule\logo_HoGent.png" />
+                                      <entry key="foregroundImage" value="C:\Users\Pieterjan\Desktop\Schule\ic_hogentlogo_white.png" />
                                       <entry key="foregroundLayerName" value="ic_launcher_foreground" />
-                                      <entry key="outputName" value="ic_logo_hogent" />
+                                      <entry key="outputName" value="ic_appicon" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -63,7 +65,8 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="C:\Users\Pieterjan\Desktop\Schule\logo_HoGent.png" />
+                                      <entry key="backgroundColor" value="1976d2" />
+                                      <entry key="imageAsset" value="C:\Users\Pieterjan\Desktop\Schule\ic_hogentlogo_white.png" />
                                       <entry key="outputName" value="ic_hogentlogo" />
                                     </map>
                                   </option>
@@ -81,11 +84,6 @@
                                 </PersistentState>
                               </value>
                             </entry>
-                          </map>
-                        </option>
-                        <option name="values">
-                          <map>
-                            <entry key="outputIconType" value="LAUNCHER_LEGACY" />
                           </map>
                         </option>
                       </PersistentState>

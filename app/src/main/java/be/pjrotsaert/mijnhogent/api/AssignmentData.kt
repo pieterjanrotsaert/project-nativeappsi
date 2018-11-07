@@ -14,4 +14,6 @@ class AssignmentData {
     var submissionAllowed = false
     var submitted = false
     var _assignmentLoaded = false
+    var courseId = 0
+    var course = CourseData()
 }

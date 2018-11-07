@@ -37,6 +37,11 @@ class RostersFragment : Fragment(), DatePickerListener {
         return inflater.inflate(R.layout.rosters_fragment, container, false)
     }
 
+    override fun onDestroyView() {
+        Chamilo.getInstance(context!!).abortRequests()
+        super.onDestroyView()
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(RostersViewModel::class.java)

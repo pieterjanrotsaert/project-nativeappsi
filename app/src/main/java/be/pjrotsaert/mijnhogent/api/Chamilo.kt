@@ -17,6 +17,9 @@ import java.net.URL
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
+import com.android.volley.RequestQueue
+
+
 
 
 class Chamilo {
@@ -250,6 +253,10 @@ class Chamilo {
         })
     }
 
+    fun abortRequests(){
+        queue?.cancelAll { true }
+    }
+
     fun getActivities(startTime: DateTime, endTime: DateTime, activityType: String, callback: (activities: ArrayList<ActivityData>?, err: APIError?) -> Unit) {
         val calStart = Calendar.getInstance()
         val calEnd = Calendar.getInstance()
@@ -407,6 +414,7 @@ class Chamilo {
                 for(assignmentId in assignmentIds){
                     val assign = AssignmentData()
                     assign.subjectName = courseName
+                    assign.courseId = courseId
                     val assignmentBody = parseBodyPart(result.body, "Display&publication=$assignmentId", "<div class=\"clear\">&nbsp;</div></div></td>") ?: ""
                     assign.title = parseBodyPart(assignmentBody, ">", "</a>") ?: ""
 
@@ -468,7 +476,11 @@ class Chamilo {
                     val announce = AnnouncementData()
                     announce.subjectName = courseName
                     announce.publicationId = pubId.toInt()
-                    announce.publicationDate = formatter.parse(publicationTimes[curIdx])
+                    if(curIdx >= publicationTimes.size)
+                        announce.publicationDate = Date()
+                    else
+                        announce.publicationDate = formatter.parse(publicationTimes[curIdx])
+                    announce.courseId = courseId
 
                     val announcementBody = parseBodyPart(result.body, "Viewer&publication=$pubId\"", "<body>") ?: ""
                     announce.title = parseBodyPart(announcementBody, ">", "</a>") ?: ""
@@ -488,7 +500,7 @@ class Chamilo {
         var desc = description
 
         if(desc.trim().isEmpty())
-            return "/"
+            return "-"
 
         desc = desc.replace("&nbsp;", " ")
         desc = desc.replace("</p>", "\n")
@@ -499,8 +511,8 @@ class Chamilo {
 
         desc = StringEscapeUtils.unescapeHtml4(desc)
         if(desc.trim().isEmpty())
-            desc = "Inhoud kan niet weergegeven worden."
-        return desc
+            desc = "De inhoud kan niet worden weergegeven."
+        return desc.trim().trim('\n')
     }
 
     // Populate each CourseData object with its relevant assignments
@@ -541,6 +553,22 @@ class Chamilo {
                 nCompleted++
                 if(nCompleted == courses.size)
                     callback(null)
+            }
+        }
+    }
+
+    fun getFullCourseDescription(course: CourseData, callback: (err: APIError?) -> Unit){
+        sendRequest(Request.Method.GET, "$urlChamiloGetCourse${course.chamilo_course_id}", constructHeaders(), null){
+            result ->
+            if(result.statusCode == 200) {
+                course.fullDescription = parseDescription(parseBodyPart(result.body, "<div style=\"overflow: auto;\">", "<html>")
+                        ?: "")
+                if(course.fullDescription == "-")
+                    course.fullDescription = ""
+                callback(null)
+            }
+            else {
+                callback(APIError(R.string.err_internal, R.string.err_internal_description))
             }
         }
     }

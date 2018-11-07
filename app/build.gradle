@@ -1,8 +1,25 @@
+
+buildscript {
+    ext.serialization_version = '0.6.2'
+
+    repositories {
+        jcenter()
+        maven { url "https://kotlin.bintray.com/kotlinx" }
+    }
+
+    dependencies {
+
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
+    }
+}
+
+
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlinx-serialization'
 
 android {
     compileSdkVersion 28
@@ -22,6 +39,11 @@ android {
     }
 }
 
+repositories {
+    jcenter()
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -38,4 +60,5 @@ dependencies {
     implementation 'info.hoang8f:android-segmented:1.0.6'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
     implementation 'org.apache.commons:commons-lang3:3.8'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.6.2"
 }
